@@ -1,6 +1,13 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const {
+  getMarketOverview,
+  getProtocolOverview,
+  getRwaWatchlist,
+  getStablecoinOverview,
+  getTokenPrice
+} = require("./lib/mantle-tools");
 
 const host = "127.0.0.1";
 const port = 3000;
@@ -11,6 +18,7 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -36,11 +44,78 @@ function sendFile(filePath, res) {
   });
 }
 
-const server = http.createServer((req, res) => {
-  const safePath = req.url === "/" ? "/index.html" : req.url;
-  const filePath = path.normalize(path.join(publicDir, safePath));
+function sendJson(res, statusCode, payload) {
+  res.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  });
+  res.end(JSON.stringify(payload));
+}
 
-  if (!filePath.startsWith(publicDir)) {
+async function handleApiRequest(url, res) {
+  try {
+    if (url.pathname === "/api/market-overview") {
+      sendJson(res, 200, await getMarketOverview());
+      return true;
+    }
+
+    if (url.pathname === "/api/stablecoins") {
+      sendJson(res, 200, await getStablecoinOverview());
+      return true;
+    }
+
+    if (url.pathname === "/api/protocols") {
+      sendJson(res, 200, await getProtocolOverview());
+      return true;
+    }
+
+    if (url.pathname === "/api/rwa-prices") {
+      sendJson(res, 200, await getRwaWatchlist());
+      return true;
+    }
+
+    if (url.pathname === "/api/token-price") {
+      const contractAddress = url.searchParams.get("contract_address");
+
+      if (!contractAddress) {
+        sendJson(res, 400, {
+          error: "Missing contract_address query parameter"
+        });
+        return true;
+      }
+
+      sendJson(res, 200, await getTokenPrice(contractAddress));
+      return true;
+    }
+  } catch (error) {
+    sendJson(res, 500, {
+      error: error instanceof Error ? error.message : "Unknown server error"
+    });
+    return true;
+  }
+
+  return false;
+}
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url || "/", `http://${host}:${port}`);
+
+  if (url.pathname.startsWith("/api/")) {
+    await handleApiRequest(url, res);
+    return;
+  }
+
+  let safePath = "public/index.html";
+
+  if (url.pathname === "/PROJECT_MEMORY.md") {
+    safePath = "PROJECT_MEMORY.md";
+  } else if (url.pathname !== "/") {
+    safePath = `public/${url.pathname.replace(/^\/+/, "")}`;
+  }
+
+  const filePath = path.normalize(path.join(__dirname, safePath));
+
+  if (!filePath.startsWith(publicDir) && filePath !== path.join(__dirname, "PROJECT_MEMORY.md")) {
     res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("403 Forbidden");
     return;
