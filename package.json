@@ -1,0 +1,10 @@
+{
+  "name": "mantle-rwa-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple local Node.js website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
