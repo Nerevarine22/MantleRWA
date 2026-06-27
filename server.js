@@ -6,7 +6,8 @@ const {
   getProtocolOverview,
   getRwaWatchlist,
   getStablecoinOverview,
-  getTokenPrice
+  getTokenPrice,
+  getMantlePools
 } = require("./lib/mantle-tools");
 const { getChatResponse, getChatHistory } = require("./lib/chat-agent");
 
@@ -67,8 +68,8 @@ async function handleApiRequest(url, res, req) {
     if (url.pathname === "/api/chat" && req.method === "POST") {
       const bodyStr = await readPostBody(req);
       const { message, sessionId } = JSON.parse(bodyStr);
-      const reply = await getChatResponse(message, sessionId);
-      sendJson(res, 200, { reply });
+      const responseObj = await getChatResponse(message, sessionId);
+      sendJson(res, 200, responseObj);
       return true;
     }
 
@@ -102,6 +103,11 @@ async function handleApiRequest(url, res, req) {
 
     if (url.pathname === "/api/rwa-prices") {
       sendJson(res, 200, await getRwaWatchlist());
+      return true;
+    }
+
+    if (url.pathname === "/api/pools") {
+      sendJson(res, 200, await getMantlePools());
       return true;
     }
 

@@ -42,10 +42,13 @@
                 <div class="chat-bubble bubble-bot">Hello! I am your RWA Copilot. Ask me about tokenized stocks or Mantle DeFi strategies.</div>
               </div>
               <div class="chat-input-area">
-                <input type="text" class="chat-input" id="chatInput" placeholder="Ask Copilot..." />
-                <button class="chat-send-btn" id="chatSendBtn">
-                  <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                </button>
+                <div class="chat-suggestions" id="chatSuggestions"></div>
+                <div style="display: flex; gap: 12px; width: 100%;">
+                  <input type="text" class="chat-input" id="chatInput" placeholder="Ask Copilot..." style="flex: 1;" />
+                  <button class="chat-send-btn" id="chatSendBtn">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  </button>
+                </div>
               </div>
             </div>
           </section>
@@ -56,6 +59,11 @@
               <article class="news-row"></article>
             </div>
           </section>
+        </section>
+
+        <section class="board-block glass" id="defi-pools" style="margin-top: 32px;">
+          <h2 class="board-title">Top DeFi Yield Pools (Mantle)</h2>
+          <div class="price-grid" id="poolsGrid"></div>
         </section>
       </main>
     </div>

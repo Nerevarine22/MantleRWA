@@ -53,6 +53,49 @@ async function fetchAndRenderPrices() {
   }
 }
 
+async function fetchAndRenderPools() {
+  try {
+    const response = await fetch('/api/pools');
+    if (!response.ok) throw new Error('Failed to fetch pools');
+    
+    const pools = await response.json();
+    const poolsGrid = document.getElementById("poolsGrid");
+    if (!poolsGrid) return;
+    
+    let poolsHTML = '';
+    
+    pools.forEach(pool => {
+      const apyText = pool.apy != null ? `${pool.apy.toFixed(2)}%` : '--';
+      const tvlText = pool.tvlUsd != null ? `$${(pool.tvlUsd / 1e6).toFixed(2)}M` : '--';
+      
+      poolsHTML += `
+        <div class="price-card">
+          <div class="card-header">
+            <div class="token-info">
+              <span class="token-symbol">${pool.symbol}</span>
+              <span class="token-name">${pool.project}</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <span class="token-price">${apyText}</span>
+            <span class="token-trend trend-up">APY</span>
+          </div>
+          <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); font-family: var(--font-label); letter-spacing: 0.1em; text-transform: uppercase;">
+            TVL: ${tvlText}
+          </div>
+        </div>
+      `;
+    });
+    
+    poolsGrid.innerHTML = poolsHTML;
+    
+  } catch (err) {
+    console.error("Error loading pools:", err);
+    const poolsGrid = document.getElementById("poolsGrid");
+    if (poolsGrid) poolsGrid.innerHTML = '<div class="error">Failed to load pools.</div>';
+  }
+}
+
 function renderNewsFeed() {
   const newsFeed = document.getElementById("newsFeed");
   const rows = [
@@ -77,11 +120,15 @@ function renderNewsFeed() {
 
 function loadDashboard() {
   fetchAndRenderPrices();
+  fetchAndRenderPools();
   renderNewsFeed();
   setupChat();
   
   // Refresh prices every 30 seconds
-  setInterval(fetchAndRenderPrices, 30000);
+  setInterval(() => {
+    fetchAndRenderPrices();
+    fetchAndRenderPools();
+  }, 30000);
 }
 
 function setupChat() {
@@ -94,8 +141,27 @@ function setupChat() {
   const chatInput = document.getElementById("chatInput");
   const chatSendBtn = document.getElementById("chatSendBtn");
   const chatMessages = document.getElementById("chatMessages");
+  const chatSuggestions = document.getElementById("chatSuggestions");
 
   if (!chatInput || !chatSendBtn || !chatMessages) return;
+
+  function renderSuggestions(suggestions) {
+    if (!chatSuggestions) return;
+    chatSuggestions.innerHTML = "";
+    if (!suggestions || !Array.isArray(suggestions) || suggestions.length === 0) return;
+
+    suggestions.forEach(sug => {
+      const btn = document.createElement("button");
+      btn.className = "chat-suggestion-btn";
+      btn.textContent = sug;
+      btn.onclick = () => {
+        chatInput.value = sug;
+        handleSend();
+        chatSuggestions.innerHTML = "";
+      };
+      chatSuggestions.appendChild(btn);
+    });
+  }
 
   function addMessage(text, isUser) {
     const bubble = document.createElement("div");
@@ -112,7 +178,14 @@ function setupChat() {
       if (Array.isArray(history)) {
         history.forEach(m => {
           if (m.content) {
-            addMessage(m.content, m.role === "user");
+            let text = m.content;
+            if (m.role === "assistant") {
+              try {
+                const parsed = JSON.parse(m.content);
+                text = parsed.reply || m.content;
+              } catch(e) {}
+            }
+            addMessage(text, m.role === "user");
           }
         });
       }
@@ -126,6 +199,9 @@ function setupChat() {
     // User message
     addMessage(text, true);
     chatInput.value = "";
+
+    // Clear old suggestions
+    renderSuggestions([]);
 
     // Show loading
     const loadingId = "loading-" + Date.now();
@@ -150,6 +226,11 @@ function setupChat() {
       
       // Add real reply
       addMessage(data.reply || "Помилка сервера", false);
+      
+      // Render suggestions if any
+      if (data.suggestions) {
+        renderSuggestions(data.suggestions);
+      }
     } catch (err) {
       document.getElementById(loadingId).remove();
       addMessage("Не вдалося зв'язатися з ШІ.", false);
