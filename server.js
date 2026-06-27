@@ -8,6 +8,7 @@ const {
   getStablecoinOverview,
   getTokenPrice
 } = require("./lib/mantle-tools");
+const { getChatResponse, getChatHistory } = require("./lib/chat-agent");
 
 const host = "127.0.0.1";
 const port = 3000;
@@ -52,8 +53,38 @@ function sendJson(res, statusCode, payload) {
   res.end(JSON.stringify(payload));
 }
 
-async function handleApiRequest(url, res) {
+function readPostBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    req.on("data", chunk => body += chunk.toString());
+    req.on("end", () => resolve(body));
+    req.on("error", reject);
+  });
+}
+
+async function handleApiRequest(url, res, req) {
   try {
+    if (url.pathname === "/api/chat" && req.method === "POST") {
+      const bodyStr = await readPostBody(req);
+      const { message, sessionId } = JSON.parse(bodyStr);
+      const reply = await getChatResponse(message, sessionId);
+      sendJson(res, 200, { reply });
+      return true;
+    }
+
+    if (url.pathname === "/api/chat/history" && req.method === "GET") {
+      const sessionId = url.searchParams.get("sessionId");
+      if (!sessionId) {
+        sendJson(res, 400, { error: "Missing sessionId" });
+        return true;
+      }
+      const history = await getChatHistory(sessionId);
+      // Фільтруємо системні та tool повідомлення для UI, повертаємо лише user і assistant
+      const displayHistory = history.filter(m => m.role === "user" || m.role === "assistant");
+      sendJson(res, 200, displayHistory);
+      return true;
+    }
+
     if (url.pathname === "/api/market-overview") {
       sendJson(res, 200, await getMarketOverview());
       return true;
@@ -101,7 +132,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${host}:${port}`);
 
   if (url.pathname.startsWith("/api/")) {
-    await handleApiRequest(url, res);
+    await handleApiRequest(url, res, req);
     return;
   }
 

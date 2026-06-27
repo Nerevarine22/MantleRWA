@@ -1,143 +1,165 @@
 const refreshButton = document.getElementById("refreshButton");
 const statusText = document.getElementById("statusText");
 
-function formatCurrency(value, maximumFractionDigits = 0) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits
-  }).format(value);
-}
-
-function formatPercent(value) {
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
-}
-
-function setText(id, value) {
-  const element = document.getElementById(id);
-
-  if (element) {
-    element.textContent = value;
+async function fetchAndRenderPrices() {
+  try {
+    const response = await fetch('/api/rwa-prices');
+    if (!response.ok) throw new Error('Failed to fetch prices');
+    
+    const tokens = await response.json();
+    
+    const treasuriesGrid = document.getElementById("treasuriesGrid");
+    const stocksGrid = document.getElementById("stocksGrid");
+    
+    let treasuriesHTML = '';
+    let stocksHTML = '';
+    
+    tokens.forEach(token => {
+      const isPositive = token.change24h >= 0;
+      const trendClass = isPositive ? 'trend-up' : 'trend-down';
+      const trendSymbol = isPositive ? '▲' : '▼';
+      const changeText = token.change24h != null ? `${trendSymbol} ${Math.abs(token.change24h).toFixed(2)}%` : '--';
+      const priceText = token.price != null ? `$${token.price.toFixed(2)}` : '--';
+      
+      const cardHTML = `
+        <div class="price-card">
+          <div class="card-header">
+            ${token.logoUrl ? `<img src="${token.logoUrl}" alt="${token.ticker}" class="token-logo"/>` : '<div class="token-logo-placeholder"></div>'}
+            <div class="token-info">
+              <span class="token-symbol">${token.ticker}</span>
+              <span class="token-name">${token.name}</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <span class="token-price">${priceText}</span>
+            <span class="token-trend ${trendClass}">${changeText}</span>
+          </div>
+        </div>
+      `;
+      
+      if (token.category === "Stocks") {
+        stocksHTML += cardHTML;
+      } else {
+        treasuriesHTML += cardHTML;
+      }
+    });
+    
+    treasuriesGrid.innerHTML = treasuriesHTML;
+    stocksGrid.innerHTML = stocksHTML;
+    
+  } catch (err) {
+    console.error("Error loading prices:", err);
+    document.getElementById("treasuriesGrid").innerHTML = '<div class="error">Failed to load market data.</div>';
   }
 }
 
-function renderProtocols(protocols) {
-  const protocolList = document.getElementById("protocolList");
+function renderNewsFeed() {
+  const newsFeed = document.getElementById("newsFeed");
+  const rows = [
+    ["w40", "w78", "w60"],
+    ["w40", "w78", "w60"],
+    ["w40", "w78", "w60"],
+    ["w40", "w78", "w60"]
+  ];
 
-  protocolList.innerHTML = protocols
+  newsFeed.innerHTML = rows
     .map(
-      (protocol) => `
-        <article class="protocol-item">
-          <div class="protocol-topline">
-            <h3 class="protocol-name">${protocol.name}</h3>
-            <span class="badge ${protocol.healthCategory}">${protocol.healthCategory}</span>
-          </div>
-          <p class="protocol-meta">
-            Mantle TVL: ${formatCurrency(protocol.mantleTvl)}<br />
-            Health Score: ${protocol.healthScore}/100<br />
-            Presence: ${protocol.hasTwitter ? "Twitter" : "No Twitter"} · ${
-              protocol.hasGithub ? "GitHub" : "No GitHub"
-            } · ${protocol.isMultiChain ? "Multi-chain" : "Mantle-first"}
-          </p>
+      (row) => `
+        <article class="news-row">
+          <div class="news-line ${row[0]}"></div>
+          <div class="news-line ${row[1]}"></div>
+          <div class="news-line ${row[2]}"></div>
         </article>
       `
     )
     .join("");
 }
 
-function renderRwaPrices(tokens) {
-  const rwaGrid = document.getElementById("rwaGrid");
-
-  rwaGrid.innerHTML = tokens
-    .map((token) => {
-      const priceText =
-        typeof token.price === "number"
-          ? formatCurrency(token.price, token.price > 100 ? 2 : 4)
-          : "Unavailable";
-
-      const confidenceText =
-        typeof token.confidence === "number"
-          ? `${Math.round(token.confidence * 100)}% confidence`
-          : "No confidence score";
-
-      return `
-        <article class="rwa-item">
-          <div class="protocol-topline">
-            <div>
-              <p class="rwa-ticker">${token.ticker}</p>
-              <h3 class="protocol-name">${token.name}</h3>
-            </div>
-            <span class="badge neutral">${token.category}</span>
-          </div>
-          <p class="rwa-price">${priceText}</p>
-          <p class="protocol-meta">
-            Issuer: ${token.issuer}<br />
-            Chain: ${token.chain}<br />
-            ${confidenceText}
-          </p>
-          <p class="rwa-note">${token.note}</p>
-        </article>
-      `;
-    })
-    .join("");
+function loadDashboard() {
+  fetchAndRenderPrices();
+  renderNewsFeed();
+  setupChat();
+  
+  // Refresh prices every 30 seconds
+  setInterval(fetchAndRenderPrices, 30000);
 }
 
-async function loadDashboard() {
-  statusText.textContent = "Refreshing market intelligence...";
-
-  try {
-    const [marketResponse, stableResponse, protocolResponse, rwaResponse] =
-      await Promise.all([
-        fetch("/api/market-overview"),
-        fetch("/api/stablecoins"),
-        fetch("/api/protocols"),
-        fetch("/api/rwa-prices")
-      ]);
-
-    if (
-      !marketResponse.ok ||
-      !stableResponse.ok ||
-      !protocolResponse.ok ||
-      !rwaResponse.ok
-    ) {
-      throw new Error("One or more live endpoints returned an error.");
-    }
-
-    const [market, stablecoins, protocols, rwaTokens] = await Promise.all([
-      marketResponse.json(),
-      stableResponse.json(),
-      protocolResponse.json(),
-      rwaResponse.json()
-    ]);
-
-    setText("marketTvl", formatCurrency(market.currentTvl));
-    setText("marketDaily", formatPercent(market.dailyChange));
-    setText("marketWeekly", formatPercent(market.weeklyChange));
-
-    setText("usdtTvl", formatCurrency(stablecoins.usdt));
-    setText("usdcTvl", formatCurrency(stablecoins.usdc));
-    setText("stableLeader", stablecoins.leader);
-
-    renderProtocols(protocols);
-    renderRwaPrices(rwaTokens);
-
-    const now = new Date().toLocaleTimeString("uk-UA");
-    statusText.textContent = `Live data refreshed at ${now}.`;
-  } catch (error) {
-    const protocolList = document.getElementById("protocolList");
-    const rwaGrid = document.getElementById("rwaGrid");
-    protocolList.innerHTML =
-      '<p class="error-copy">Could not load live protocol data.</p>';
-    rwaGrid.innerHTML =
-      '<p class="error-copy">Could not load RWA watchlist prices.</p>';
-    statusText.textContent =
-      error instanceof Error
-        ? `Load error: ${error.message}`
-        : "An unknown error occurred.";
+function setupChat() {
+  let sessionId = localStorage.getItem("chatSessionId");
+  if (!sessionId) {
+    sessionId = "session-" + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem("chatSessionId", sessionId);
   }
-}
 
-refreshButton.addEventListener("click", loadDashboard);
+  const chatInput = document.getElementById("chatInput");
+  const chatSendBtn = document.getElementById("chatSendBtn");
+  const chatMessages = document.getElementById("chatMessages");
+
+  if (!chatInput || !chatSendBtn || !chatMessages) return;
+
+  function addMessage(text, isUser) {
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble ${isUser ? "bubble-user" : "bubble-bot"}`;
+    bubble.textContent = text;
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // Завантажуємо історію
+  fetch(`/api/chat/history?sessionId=${sessionId}`)
+    .then(res => res.json())
+    .then(history => {
+      if (Array.isArray(history)) {
+        history.forEach(m => {
+          if (m.content) {
+            addMessage(m.content, m.role === "user");
+          }
+        });
+      }
+    })
+    .catch(err => console.error("Failed to load chat history", err));
+
+  async function handleSend() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    
+    // User message
+    addMessage(text, true);
+    chatInput.value = "";
+
+    // Show loading
+    const loadingId = "loading-" + Date.now();
+    const loadingBubble = document.createElement("div");
+    loadingBubble.id = loadingId;
+    loadingBubble.className = "chat-bubble bubble-bot";
+    loadingBubble.textContent = "...";
+    chatMessages.appendChild(loadingBubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, sessionId: sessionId }),
+      });
+      
+      const data = await response.json();
+      
+      // Remove loading bubble
+      document.getElementById(loadingId).remove();
+      
+      // Add real reply
+      addMessage(data.reply || "Помилка сервера", false);
+    } catch (err) {
+      document.getElementById(loadingId).remove();
+      addMessage("Не вдалося зв'язатися з ШІ.", false);
+    }
+  }
+
+  chatSendBtn.addEventListener("click", handleSend);
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") handleSend();
+  });
+}
 
 loadDashboard();

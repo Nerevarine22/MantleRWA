@@ -4,182 +4,62 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mantle RWA Intelligence Hub</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/style.css?v=2" />
   </head>
   <body>
-    <main class="page-shell">
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Mantle RWA Intelligence Hub</p>
-          <h1>Your AI copilot for researching real-world assets on Mantle</h1>
-          <p class="lead">
-            A research and decision-support experience for retail RWA investors.
-            Users move from market overview to education, portfolio planning,
-            and yield discovery without leaving one interface.
-          </p>
-          <div class="actions">
-            <button class="button primary" id="refreshButton">
-              Refresh live data
-            </button>
-            <a class="button secondary" href="/PROJECT_MEMORY.md">
-              Open knowledge base
-            </a>
-          </div>
-          <p class="status" id="statusText">Waiting for first data load...</p>
-        </div>
-        <aside class="hero-panel">
-          <p class="panel-label">Core Areas</p>
-          <ul class="tool-list">
-            <li>RWA Market Overview</li>
-            <li>AI Investment Copilot</li>
-            <li>RWA Academy</li>
-            <li>Yield Opportunities</li>
-          </ul>
-        </aside>
-      </section>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <nav class="nav-list" aria-label="Primary">
+          <a class="nav-item nav-item-active" href="#market">Portfolio</a>
+          <a class="nav-item" href="#copilot">Learn RWA</a>
+          <a class="nav-item" href="#yield-strip">Find Yield</a>
+          <a class="nav-item" href="#news">Historical Data</a>
+        </nav>
+      </aside>
 
-      <section class="feature-grid">
-        <article class="feature-card">
-          <p class="card-label">AI Copilot</p>
-          <h2>Research, compare, and explain</h2>
-          <p class="feature-copy">
-            The copilot is designed to remember user goals, portfolio context,
-            investment horizon, and risk tolerance across sessions.
-          </p>
-          <ul class="prompt-list">
-            <li>Build an RWA portfolio for $10,000</li>
-            <li>Compare treasury RWAs and tokenized equities</li>
-            <li>Analyze my portfolio risk</li>
-          </ul>
-        </article>
+      <main class="main-panel">
+        <section class="board-block glass board-top" id="market">
+          <div class="board-head board-head-split">
+            <h2 class="board-title">Treasuries & Commodities</h2>
+            <h2 class="board-title">Tokenized Stocks</h2>
+          </div>
+          <div class="market-grids">
+            <div class="price-grid" id="treasuriesGrid"></div>
+            <div class="price-grid" id="stocksGrid"></div>
+          </div>
+        </section>
 
-        <article class="feature-card">
-          <p class="card-label">RWA Academy</p>
-          <h2>Learn before you allocate</h2>
-          <p class="feature-copy">
-            A dedicated learning layer for tokenization basics, asset classes,
-            diversification, risk management, and Mantle ecosystem guides.
-          </p>
-          <ul class="prompt-list">
-            <li>RWA fundamentals</li>
-            <li>Treasury, private credit, and real estate explainers</li>
-            <li>Mantle ecosystem guides</li>
-          </ul>
-        </article>
+        <section class="board-strip glass" id="yield-strip">
+          <div class="strip-item">Yield Opportunities</div>
+          <div class="strip-item">Market Snapshot</div>
+        </section>
 
-        <article class="feature-card">
-          <p class="card-label">Yield Opportunities</p>
-          <h2>Scan for income strategies</h2>
-          <p class="feature-copy">
-            A dedicated section for lending, vaults, liquidity, and reward
-            programs linked to RWA-related assets and protocols on Mantle.
-          </p>
-          <ul class="prompt-list">
-            <li>Expected APY</li>
-            <li>Risk score and lock period</li>
-            <li>Strategy description and capital efficiency</li>
-          </ul>
-        </article>
-      </section>
+        <section class="content-grid">
+          <section class="board-block glass board-chat" id="copilot">
+            <h2 class="board-title">CHAT AI</h2>
+            <div class="chat-shell">
+              <div class="chat-messages" id="chatMessages">
+                <div class="chat-bubble bubble-bot">Hello! I am your RWA Copilot. Ask me about tokenized stocks or Mantle DeFi strategies.</div>
+              </div>
+              <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask Copilot..." />
+                <button class="chat-send-btn" id="chatSendBtn">
+                  <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+              </div>
+            </div>
+          </section>
 
-      <section class="dashboard-grid">
-        <article class="data-card">
-          <p class="card-label">Mantle Network</p>
-          <h2>Market Overview</h2>
-          <div class="metric-row">
-            <span class="metric-name">Current TVL</span>
-            <strong class="metric-value" id="marketTvl">Loading...</strong>
-          </div>
-          <div class="metric-row">
-            <span class="metric-name">24h change</span>
-            <strong class="metric-value" id="marketDaily">Loading...</strong>
-          </div>
-          <div class="metric-row">
-            <span class="metric-name">7d change</span>
-            <strong class="metric-value" id="marketWeekly">Loading...</strong>
-          </div>
-        </article>
+          <section class="board-block glass board-news" id="news">
+            <h2 class="board-title">Top News - Market Trends</h2>
+            <div class="news-stack" id="newsFeed">
+              <article class="news-row"></article>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
 
-        <article class="data-card">
-          <p class="card-label">Capital Flow</p>
-          <h2>Stablecoin liquidity snapshot</h2>
-          <div class="metric-row">
-            <span class="metric-name">USDT bridged TVL</span>
-            <strong class="metric-value" id="usdtTvl">Loading...</strong>
-          </div>
-          <div class="metric-row">
-            <span class="metric-name">USDC bridged TVL</span>
-            <strong class="metric-value" id="usdcTvl">Loading...</strong>
-          </div>
-          <div class="metric-row">
-            <span class="metric-name">Current leader</span>
-            <strong class="metric-value" id="stableLeader">Loading...</strong>
-          </div>
-        </article>
-
-        <article class="data-card protocols-card">
-          <p class="card-label">Market Intelligence</p>
-          <h2>Protocol health signals</h2>
-          <div class="protocol-list" id="protocolList">
-            <p class="loading-copy">Loading protocol summaries...</p>
-          </div>
-        </article>
-      </section>
-
-      <section class="data-card rwa-section">
-        <div class="section-head">
-          <div>
-            <p class="card-label">RWA Watchlist</p>
-            <h2>Curated token prices via DeFiLlama</h2>
-          </div>
-          <p class="section-note">
-            This MVP watchlist blends asset-backed tokens with RWA
-            infrastructure names so users can see both direct exposure and
-            ecosystem context in one place.
-          </p>
-        </div>
-        <div class="rwa-grid" id="rwaGrid">
-          <p class="loading-copy">Loading RWA prices...</p>
-        </div>
-      </section>
-
-      <section class="data-card category-section">
-        <div class="section-head">
-          <div>
-            <p class="card-label">Target Taxonomy</p>
-            <h2>How the hub will organize the RWA market</h2>
-          </div>
-          <p class="section-note">
-            The long-term dashboard is designed around categories that help
-            users compare growth, capital rotation, yield, and risk across the
-            Mantle RWA landscape.
-          </p>
-        </div>
-        <div class="category-grid">
-          <article class="category-item">
-            <h3 class="protocol-name">Tokenized Treasuries</h3>
-            <p class="protocol-meta">USDY, OUSG, and treasury-style products.</p>
-          </article>
-          <article class="category-item">
-            <h3 class="protocol-name">Tokenized Equities</h3>
-            <p class="protocol-meta">xStocks, tokenized ETFs, and public-market exposure.</p>
-          </article>
-          <article class="category-item">
-            <h3 class="protocol-name">Private Credit</h3>
-            <p class="protocol-meta">Maple-style credit markets and yield-bearing credit structures.</p>
-          </article>
-          <article class="category-item">
-            <h3 class="protocol-name">Real Estate</h3>
-            <p class="protocol-meta">Tokenized property exposure and real-estate-linked assets.</p>
-          </article>
-          <article class="category-item">
-            <h3 class="protocol-name">Commodities</h3>
-            <p class="protocol-meta">Gold and other commodity-backed onchain assets.</p>
-          </article>
-        </div>
-      </section>
-    </main>
-
-    <script src="/script.js"></script>
+    <script src="/script.js?v=2"></script>
   </body>
 </html>

@@ -1,1 +1,4 @@
 mantle-mcp-review/
+node_modules/
+serviceAccountKey.json
+.env

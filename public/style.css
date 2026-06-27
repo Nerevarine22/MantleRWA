@@ -363,3 +363,254 @@ h2 {
     font-size: 16px;
   }
 }
+
+/* Restored Missing Dashboard Styles */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 250px;
+  background: rgba(11, 24, 42, 0.4);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--line);
+  padding: 24px;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  padding: 12px 16px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 12px;
+  transition: background 0.2s, color 0.2s;
+  font-weight: 500;
+}
+
+.nav-item:hover, .nav-item-active {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.main-panel {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.glass {
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  backdrop-filter: blur(16px);
+}
+
+.board-block {
+  padding: 24px;
+}
+
+.board-head-split {
+  display: flex;
+  justify-content: space-between;
+}
+
+.board-title {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: var(--text);
+}
+
+.market-grids {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.price-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.token-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.token-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.token-symbol {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.token-name {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.token-price {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.token-trend {
+  font-size: 13px;
+}
+
+.trend-up {
+  color: #53d3a6;
+}
+
+.trend-down {
+  color: #fca5a5;
+}
+
+.board-strip {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 24px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.chat-shell {
+  display: flex;
+  flex-direction: column;
+  height: 400px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 12px;
+  margin-bottom: 16px;
+}
+
+.chat-bubble {
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 85%;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bubble-bot {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.bubble-user {
+  background: var(--accent);
+  color: #031016;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 12px;
+}
+
+.chat-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--line);
+  padding: 12px 16px;
+  border-radius: 20px;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.chat-send-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-send-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: #031016;
+}
+
+.news-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.news-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+}
+
+.news-line {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.w40 { width: 40%; }
+.w78 { width: 78%; }
+.w60 { width: 60%; }
