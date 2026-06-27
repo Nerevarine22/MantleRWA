@@ -244,7 +244,7 @@ function setupChat() {
   }
 
   window.triggerChatWithContext = async function(assetData) {
-    const text = `Аналіз активу: ${assetData.ticker || assetData.symbol}`;
+    const text = `Asset analysis: ${assetData.ticker || assetData.symbol}`;
     addMessage(text, true);
     
     renderSuggestions([]);
@@ -253,7 +253,7 @@ function setupChat() {
     const loadingBubble = document.createElement("div");
     loadingBubble.id = loadingId;
     loadingBubble.className = "chat-bubble bubble-bot";
-    loadingBubble.innerHTML = "<p>... аналізую контекст ...</p>";
+    loadingBubble.innerHTML = "<p>... analyzing context ...</p>";
     chatMessages.appendChild(loadingBubble);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
