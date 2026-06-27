@@ -21,8 +21,9 @@ async function fetchAndRenderPrices() {
       const changeText = token.change24h != null ? `${trendSymbol} ${Math.abs(token.change24h).toFixed(2)}%` : '--';
       const priceText = token.price != null ? `$${token.price.toFixed(2)}` : '--';
       
+      const assetData = JSON.stringify({ ticker: token.ticker, price: token.price }).replace(/"/g, '&quot;');
       const cardHTML = `
-        <div class="price-card">
+        <div class="price-card" onclick="window.triggerChatWithContext(${assetData})">
           <div class="card-header">
             ${token.logoUrl ? `<img src="${token.logoUrl}" alt="${token.ticker}" class="token-logo"/>` : '<div class="token-logo-placeholder"></div>'}
             <div class="token-info">
@@ -68,8 +69,9 @@ async function fetchAndRenderPools() {
       const apyText = pool.apy != null ? `${pool.apy.toFixed(2)}%` : '--';
       const tvlText = pool.tvlUsd != null ? `$${(pool.tvlUsd / 1e6).toFixed(2)}M` : '--';
       
+      const assetData = JSON.stringify({ symbol: pool.symbol, project: pool.project, apy: pool.apy, tvlUsd: pool.tvlUsd }).replace(/"/g, '&quot;');
       poolsHTML += `
-        <div class="price-card">
+        <div class="price-card" onclick="window.triggerChatWithContext(${assetData})">
           <div class="card-header">
             <div class="token-info">
               <span class="token-symbol">${pool.symbol}</span>
@@ -166,7 +168,11 @@ function setupChat() {
   function addMessage(text, isUser) {
     const bubble = document.createElement("div");
     bubble.className = `chat-bubble ${isUser ? "bubble-user" : "bubble-bot"}`;
-    bubble.textContent = text;
+    if (isUser) {
+      bubble.textContent = text;
+    } else {
+      bubble.innerHTML = typeof marked !== 'undefined' ? marked.parse(text) : text;
+    }
     chatMessages.appendChild(bubble);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
@@ -208,7 +214,7 @@ function setupChat() {
     const loadingBubble = document.createElement("div");
     loadingBubble.id = loadingId;
     loadingBubble.className = "chat-bubble bubble-bot";
-    loadingBubble.textContent = "...";
+    loadingBubble.innerHTML = "<p>...</p>";
     chatMessages.appendChild(loadingBubble);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -236,6 +242,44 @@ function setupChat() {
       addMessage("Не вдалося зв'язатися з ШІ.", false);
     }
   }
+
+  window.triggerChatWithContext = async function(assetData) {
+    const text = `Аналіз активу: ${assetData.ticker || assetData.symbol}`;
+    addMessage(text, true);
+    
+    renderSuggestions([]);
+
+    const loadingId = "loading-" + Date.now();
+    const loadingBubble = document.createElement("div");
+    loadingBubble.id = loadingId;
+    loadingBubble.className = "chat-bubble bubble-bot";
+    loadingBubble.innerHTML = "<p>... аналізую контекст ...</p>";
+    chatMessages.appendChild(loadingBubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          message: text, 
+          sessionId: sessionId,
+          contextTrigger: {
+            type: "CONTEXT_TRIGGER",
+            data: assetData
+          }
+        }),
+      });
+      
+      const data = await response.json();
+      document.getElementById(loadingId).remove();
+      addMessage(data.reply || "Помилка сервера", false);
+      if (data.suggestions) renderSuggestions(data.suggestions);
+    } catch (err) {
+      document.getElementById(loadingId).remove();
+      addMessage("Не вдалося зв'язатися з ШІ.", false);
+    }
+  };
 
   chatSendBtn.addEventListener("click", handleSend);
   chatInput.addEventListener("keypress", (e) => {

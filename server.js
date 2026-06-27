@@ -67,8 +67,8 @@ async function handleApiRequest(url, res, req) {
   try {
     if (url.pathname === "/api/chat" && req.method === "POST") {
       const bodyStr = await readPostBody(req);
-      const { message, sessionId } = JSON.parse(bodyStr);
-      const responseObj = await getChatResponse(message, sessionId);
+      const { message, sessionId, contextTrigger } = JSON.parse(bodyStr);
+      const responseObj = await getChatResponse(message, sessionId, contextTrigger);
       sendJson(res, 200, responseObj);
       return true;
     }

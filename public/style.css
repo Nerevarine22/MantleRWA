@@ -253,6 +253,23 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
   font-family: var(--font-label);
 }
 
+.chat-bubble p {
+  margin-bottom: 12px;
+}
+.chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+.chat-bubble ul, .chat-bubble ol {
+  margin-left: 24px;
+  margin-bottom: 12px;
+}
+.chat-bubble li {
+  margin-bottom: 4px;
+}
+.bubble-bot strong {
+  color: #fff;
+}
+
 .bubble-bot {
   background: rgba(0, 242, 255, 0.1);
   border: 1px solid rgba(0, 242, 255, 0.5);
