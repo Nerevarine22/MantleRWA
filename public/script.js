@@ -117,8 +117,10 @@ async function renderNewsFeed() {
 
     newsFeed.innerHTML = news
       .map(
-        (item) => `
-          <a href="${item.url}" target="_blank" class="news-card">
+        (item) => {
+          const safeTitle = item.title.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+          return `
+          <div class="news-card">
             ${item.imageUrl ? `<img src="${item.imageUrl}" alt="News thumbnail" class="news-thumb" />` : ''}
             <div class="news-content">
               <h3 class="news-headline">${item.title}</h3>
@@ -127,9 +129,20 @@ async function renderNewsFeed() {
                 <span class="news-meta-source">${item.source}</span>
                 <span>${new Date(item.createdAt?._seconds * 1000 || item.createdAt || Date.now()).toLocaleDateString()}</span>
               </div>
+              <div class="news-actions">
+                <a href="${item.url}" target="_blank" class="news-btn-source">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                  Read Source
+                </a>
+                <button class="news-btn-ask" onclick="askCopilotAboutNews('${safeTitle}')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  Ask Copilot
+                </button>
+              </div>
             </div>
-          </a>
-        `
+          </div>
+        `;
+        }
       )
       .join("");
   } catch (e) {
@@ -137,6 +150,16 @@ async function renderNewsFeed() {
     console.error(e);
   }
 }
+
+window.askCopilotAboutNews = function(newsTitle) {
+  const chatInput = document.getElementById("chatInput");
+  const chatSendBtn = document.getElementById("chatSendBtn");
+  if (chatInput && chatSendBtn) {
+    chatInput.value = `Поясни мені детальніше цю новину: ${newsTitle}`;
+    chatSendBtn.click();
+    chatInput.scrollIntoView({ behavior: 'smooth' });
+  }
+};
 
 async function fetchAndRenderPortfolioSummary() {
   let sessionId = localStorage.getItem("chatSessionId");

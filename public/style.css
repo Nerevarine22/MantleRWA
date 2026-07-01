@@ -482,6 +482,41 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
   color: var(--text-main);
 }
 
+.news-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.news-btn-source, .news-btn-ask {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-main);
+}
+
+.news-btn-source:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.news-btn-ask {
+  background: var(--brand-accent);
+  color: #fff;
+}
+
+.news-btn-ask:hover {
+  background: #0088ff;
+}
+
 /* Pool Cards */
 .pool-card {
   gap: 16px;
