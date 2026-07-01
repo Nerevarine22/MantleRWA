@@ -8,24 +8,29 @@ async function fetchAndRenderPrices() {
     
     const tokens = await response.json();
     
-    const treasuriesGrid = document.getElementById("treasuriesGrid");
-    const stocksGrid = document.getElementById("stocksGrid");
+    const assetGrid = document.getElementById("assetGrid");
     
-    let treasuriesHTML = '';
-    let stocksHTML = '';
+    let assetHTML = '';
     
     tokens.forEach(token => {
       const isPositive = token.change24h >= 0;
       const trendClass = isPositive ? 'trend-up' : 'trend-down';
-      const trendSymbol = isPositive ? '▲' : '▼';
-      const changeText = token.change24h != null ? `${trendSymbol} ${Math.abs(token.change24h).toFixed(2)}%` : '--';
+      const trendSymbol = isPositive ? '+' : '';
+      const changeText = token.change24h != null ? `${trendSymbol}${token.change24h.toFixed(2)}%` : '--';
       const priceText = token.price != null ? `$${token.price.toFixed(2)}` : '--';
+      const firstLetter = token.ticker.replace('x', '')[0] || token.ticker[0];
       
       const assetData = JSON.stringify({ ticker: token.ticker, price: token.price }).replace(/"/g, '&quot;');
+      const logoFallbackId = `logo-${token.ticker}`;
       const cardHTML = `
         <div class="price-card" onclick="window.triggerChatWithContext(${assetData})">
           <div class="card-header">
-            ${token.logoUrl ? `<img src="${token.logoUrl}" alt="${token.ticker}" class="token-logo"/>` : '<div class="token-logo-placeholder"></div>'}
+            <div class="token-logo-wrapper">
+              ${token.logoUrl 
+                ? `<img src="${token.logoUrl}" alt="${token.ticker}" class="token-logo" id="${logoFallbackId}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/><span class="logo-fallback" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-muted);">${firstLetter}</span>`
+                : `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-muted);">${firstLetter}</span>`
+              }
+            </div>
             <div class="token-info">
               <span class="token-symbol">${token.ticker}</span>
               <span class="token-name">${token.name}</span>
@@ -38,19 +43,15 @@ async function fetchAndRenderPrices() {
         </div>
       `;
       
-      if (token.category === "Stocks") {
-        stocksHTML += cardHTML;
-      } else {
-        treasuriesHTML += cardHTML;
-      }
+      assetHTML += cardHTML;
     });
+
     
-    treasuriesGrid.innerHTML = treasuriesHTML;
-    stocksGrid.innerHTML = stocksHTML;
+    if (assetGrid) assetGrid.innerHTML = assetHTML;
     
   } catch (err) {
     console.error("Error loading prices:", err);
-    document.getElementById("treasuriesGrid").innerHTML = '<div class="error">Failed to load market data.</div>';
+    if (document.getElementById("assetGrid")) document.getElementById("assetGrid").innerHTML = '<div class="error">Failed to load market data.</div>';
   }
 }
 
@@ -71,20 +72,22 @@ async function fetchAndRenderPools() {
       
       const assetData = JSON.stringify({ symbol: pool.symbol, project: pool.project, apy: pool.apy, tvlUsd: pool.tvlUsd }).replace(/"/g, '&quot;');
       poolsHTML += `
-        <div class="price-card" onclick="window.triggerChatWithContext(${assetData})">
-          <div class="card-header">
-            <div class="token-info">
-              <span class="token-symbol">${pool.symbol}</span>
-              <span class="token-name">${pool.project}</span>
+        <div class="pool-card" onclick="window.triggerChatWithContext(${assetData})">
+          <div class="pool-header">
+            <span class="pool-name">${pool.symbol}</span>
+            <span class="token-trend badge-neutral">${pool.project}</span>
+          </div>
+          <div class="pool-stats">
+            <div class="pool-stat-col">
+              <span class="panel-label">APY</span>
+              <span class="pool-stat-value highlight">${apyText}</span>
+            </div>
+            <div class="pool-stat-col">
+              <span class="panel-label">TVL</span>
+              <span class="pool-stat-value">${tvlText}</span>
             </div>
           </div>
-          <div class="card-body">
-            <span class="token-price">${apyText}</span>
-            <span class="token-trend trend-up">APY</span>
-          </div>
-          <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); font-family: var(--font-label); letter-spacing: 0.1em; text-transform: uppercase;">
-            TVL: ${tvlText}
-          </div>
+          <button class="btn-deposit" onclick="event.stopPropagation(); alert('Deposit modal coming soon!')">Deposit</button>
         </div>
       `;
     });
@@ -98,29 +101,103 @@ async function fetchAndRenderPools() {
   }
 }
 
-function renderNewsFeed() {
+async function renderNewsFeed() {
   const newsFeed = document.getElementById("newsFeed");
-  const rows = [
-    ["w40", "w78", "w60"],
-    ["w40", "w78", "w60"],
-    ["w40", "w78", "w60"],
-    ["w40", "w78", "w60"]
-  ];
+  if (!newsFeed) return;
+  
+  try {
+    const res = await fetch('/api/news');
+    if (!res.ok) throw new Error("Failed to fetch");
+    const news = await res.json();
 
-  newsFeed.innerHTML = rows
-    .map(
-      (row) => `
-        <article class="news-row">
-          <div class="news-line ${row[0]}"></div>
-          <div class="news-line ${row[1]}"></div>
-          <div class="news-line ${row[2]}"></div>
-        </article>
-      `
-    )
-    .join("");
+    if (!news || news.length === 0) {
+      newsFeed.innerHTML = '<p class="muted-desc">No news available at the moment.</p>';
+      return;
+    }
+
+    newsFeed.innerHTML = news
+      .map(
+        (item) => `
+          <a href="${item.url}" target="_blank" class="news-card">
+            ${item.imageUrl ? `<img src="${item.imageUrl}" alt="News thumbnail" class="news-thumb" />` : ''}
+            <div class="news-content">
+              <h3 class="news-headline">${item.title}</h3>
+              <p class="news-snippet">${item.snippet}</p>
+              <div class="news-meta">
+                <span class="news-meta-source">${item.source}</span>
+                <span>${new Date(item.createdAt?._seconds * 1000 || item.createdAt || Date.now()).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </a>
+        `
+      )
+      .join("");
+  } catch (e) {
+    newsFeed.innerHTML = '<div class="error">Failed to load news.</div>';
+    console.error(e);
+  }
+}
+
+async function fetchAndRenderPortfolioSummary() {
+  let sessionId = localStorage.getItem("chatSessionId");
+  if (!sessionId) return;
+  
+  try {
+    const portRes = await fetch(`/api/portfolio?sessionId=${sessionId}`);
+    const priceRes = await fetch('/api/rwa-prices');
+    
+    if (!portRes.ok || !priceRes.ok) return;
+    
+    const portfolio = await portRes.json();
+    const prices = await priceRes.json();
+    
+    if (!Array.isArray(portfolio) || portfolio.length === 0) {
+      document.getElementById("dashTotalBalance").textContent = "$0.00";
+      document.getElementById("dashTotalChange").innerHTML = '<span style="font-size: 13px; font-weight: normal; color: var(--text-muted);">No assets yet. Click to build.</span>';
+      return;
+    }
+    
+    let totalUsd = 0;
+    let totalChangeUsd = 0;
+    
+    portfolio.forEach(p => {
+      const liveAsset = prices.find(a => a.ticker === p.ticker);
+      if (liveAsset) {
+        const currentUsd = p.amount * liveAsset.price;
+        totalUsd += currentUsd;
+        
+        if (liveAsset.change24h != null) {
+           const previousValue = currentUsd / (1 + (liveAsset.change24h / 100));
+           totalChangeUsd += (currentUsd - previousValue);
+        }
+      } else {
+        totalUsd += p.valueUsd || 0;
+      }
+    });
+    
+    document.getElementById("dashTotalBalance").textContent = `$${totalUsd.toFixed(2)}`;
+    
+    if (totalChangeUsd !== 0) {
+      const isPositive = totalChangeUsd >= 0;
+      const sign = isPositive ? "+" : "";
+      const pctChange = (totalChangeUsd / Math.abs(totalUsd - totalChangeUsd)) * 100;
+      
+      document.getElementById("dashTotalChange").innerHTML = `
+        <span class="${isPositive ? 'token-trend trend-up' : 'token-trend trend-down'}" style="font-size: 14px;">
+          ${sign}$${Math.abs(totalChangeUsd).toFixed(2)} (${sign}${pctChange.toFixed(2)}%)
+        </span>
+      `;
+    }
+    
+    document.getElementById("dashEstYield").innerHTML = `<span class="token-trend badge-neutral" style="font-size: 14px;">~ 5.2% APY</span>`;
+    
+  } catch (err) {
+    console.error("Failed to render portfolio summary", err);
+  }
 }
 
 function loadDashboard() {
+  fetchAndRenderPortfolioSummary();
   fetchAndRenderPrices();
   fetchAndRenderPools();
   renderNewsFeed();
@@ -128,6 +205,7 @@ function loadDashboard() {
   
   // Refresh prices every 30 seconds
   setInterval(() => {
+    fetchAndRenderPortfolioSummary();
     fetchAndRenderPrices();
     fetchAndRenderPools();
   }, 30000);

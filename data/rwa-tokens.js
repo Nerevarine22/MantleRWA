@@ -40,7 +40,7 @@ module.exports = [
     chain: "coingecko",
     address: "backed-tesla",
     note: "Tokenized representation of Tesla Inc. (TSLA)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/b/bb/Tesla_T_symbol.svg"
+    logoUrl: "https://logo.clearbit.com/tesla.com"
   },
   {
     ticker: "xNVDA",
@@ -50,7 +50,7 @@ module.exports = [
     chain: "coingecko",
     address: "bndva-backed-nvidia",
     note: "Tokenized representation of Nvidia Corp. (NVDA)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg"
+    logoUrl: "https://logo.clearbit.com/nvidia.com"
   },
   {
     ticker: "xCSPX",
@@ -60,7 +60,7 @@ module.exports = [
     chain: "coingecko",
     address: "backed-cspx-core-s-p-500",
     note: "Tokenized representation of the S&P 500 ETF",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/0/04/S%26P_Global_logo.svg"
+    logoUrl: "https://logo.clearbit.com/spglobal.com"
   },
   {
     ticker: "xMSFT",
@@ -70,7 +70,7 @@ module.exports = [
     chain: "coingecko",
     address: "backed-microsoft",
     note: "Tokenized representation of Microsoft Corp. (MSFT)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+    logoUrl: "https://logo.clearbit.com/microsoft.com"
   },
   {
     ticker: "xCOIN",
@@ -80,7 +80,7 @@ module.exports = [
     chain: "coingecko",
     address: "backed-coinbase-global",
     note: "Tokenized representation of Coinbase Global (COIN)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/c/c8/Coinbase_icon.svg"
+    logoUrl: "https://logo.clearbit.com/coinbase.com"
   },
   {
     ticker: "xMSTR",
@@ -90,7 +90,7 @@ module.exports = [
     chain: "coingecko",
     address: "backed-microstrategy",
     note: "Tokenized representation of MicroStrategy (MSTR)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/e/ec/MicroStrategy_logo.svg"
+    logoUrl: "https://logo.clearbit.com/microstrategy.com"
   },
   {
     ticker: "xGOOGL",
@@ -100,7 +100,7 @@ module.exports = [
     chain: "coingecko",
     address: "backed-alphabet-class-a",
     note: "Tokenized representation of Alphabet Class A (GOOGL)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+    logoUrl: "https://logo.clearbit.com/google.com"
   },
   {
     ticker: "xGME",
@@ -110,7 +110,7 @@ module.exports = [
     chain: "coingecko",
     address: "backed-gamestop-corp",
     note: "Tokenized representation of GameStop Corp. (GME)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/0/05/GameStop_logo.svg"
+    logoUrl: "https://logo.clearbit.com/gamestop.com"
   },
   {
     ticker: "xNIU",
@@ -120,6 +120,6 @@ module.exports = [
     chain: "coingecko",
     address: "backed-niu-technologies",
     note: "Tokenized representation of Niu Technologies (NIU)",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/1/1a/NIU_logo.svg"
+    logoUrl: "https://logo.clearbit.com/niu.com"
   }
 ];

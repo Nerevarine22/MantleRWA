@@ -4,47 +4,73 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mantle RWA Intelligence Hub</title>
-    <link rel="stylesheet" href="/style.css?v=2" />
+    <link rel="stylesheet" href="/style.css?v=3" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
+        <div class="brand-logo">Mantle RWA</div>
         <nav class="nav-list" aria-label="Primary">
-          <a class="nav-item nav-item-active" href="#market">Portfolio</a>
-          <a class="nav-item" href="#copilot">Learn RWA</a>
-          <a class="nav-item" href="#yield-strip">Find Yield</a>
-          <a class="nav-item" href="#news">Historical Data</a>
+          <a class="nav-item" href="/portfolio">Portfolio Manager</a>
+          <a class="nav-item nav-item-active" href="#market">Treasuries & Stocks</a>
+          <a class="nav-item" href="#copilot">AI Copilot & News</a>
+          <a class="nav-item" href="#yield-strip">Yield Opportunities</a>
+          <a class="nav-item" href="#historical">Historical Data</a>
         </nav>
       </aside>
 
       <main class="main-panel">
-        <section class="board-block glass board-top" id="market">
-          <div class="board-head board-head-split">
-            <h2 class="board-title">Treasuries & Commodities</h2>
-            <h2 class="board-title">Tokenized Stocks</h2>
-          </div>
-          <div class="market-grids">
-            <div class="price-grid" id="treasuriesGrid"></div>
-            <div class="price-grid" id="stocksGrid"></div>
+        <!-- 1. Portfolio Summary -->
+        <section class="board-block glass portfolio-bar" id="portfolio" style="cursor: pointer;" onclick="window.location.href='/portfolio'">
+          <div class="portfolio-bar-inner">
+            <div class="portfolio-bar-left">
+              <span class="eyebrow">Portfolio</span>
+              <span class="portfolio-bar-title">Portfolio Summary</span>
+            </div>
+            <div class="portfolio-bar-stats">
+              <div class="portfolio-bar-stat">
+                <span class="panel-label">Total Balance</span>
+                <span class="portfolio-bar-value" id="dashTotalBalance">$0.00</span>
+              </div>
+              <div class="portfolio-bar-divider"></div>
+              <div class="portfolio-bar-stat">
+                <span class="panel-label">24h Change</span>
+                <span class="portfolio-bar-value" id="dashTotalChange" style="color: var(--text-muted);">--</span>
+              </div>
+              <div class="portfolio-bar-divider"></div>
+              <div class="portfolio-bar-stat">
+                <span class="panel-label">Est. Yield</span>
+                <span class="portfolio-bar-value" id="dashEstYield" style="color: var(--text-muted);">--</span>
+              </div>
+            </div>
+            <div class="portfolio-bar-cta">
+              <span class="panel-label" style="color: var(--text-muted);">Manage →</span>
+            </div>
           </div>
         </section>
 
-        <section class="board-strip glass" id="yield-strip">
-          <div class="strip-item">Yield Opportunities</div>
-          <div class="strip-item">Market Snapshot</div>
+        <!-- 2. Real World Assets -->
+        <section class="board-block glass" id="market">
+          <div class="board-head" style="margin-bottom: 16px;">
+            <h2 class="board-title">Treasuries, Commodities & Stocks</h2>
+          </div>
+          <div class="price-grid" id="assetGrid"></div>
         </section>
 
-        <section class="content-grid">
-          <section class="board-block glass board-chat" id="copilot">
-            <h2 class="board-title">CHAT AI</h2>
+        <!-- 3. AI Copilot + News -->
+        <section class="content-grid" id="copilot">
+          <section class="board-block glass board-chat">
+            <div class="board-head">
+              <h2 class="board-title">AI Copilot</h2>
+            </div>
             <div class="chat-shell">
               <div class="chat-messages" id="chatMessages">
                 <div class="chat-bubble bubble-bot">Hello! I am your RWA Copilot. Ask me about tokenized stocks or Mantle DeFi strategies.</div>
               </div>
               <div class="chat-input-area">
                 <div class="chat-suggestions" id="chatSuggestions"></div>
-                <div style="display: flex; gap: 12px; width: 100%;">
-                  <input type="text" class="chat-input" id="chatInput" placeholder="Ask Copilot..." style="flex: 1;" />
+                <div class="chat-input-wrapper">
+                  <input type="text" class="chat-input" id="chatInput" placeholder="Ask Copilot..." />
                   <button class="chat-send-btn" id="chatSendBtn">
                     <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                   </button>
@@ -54,21 +80,36 @@
           </section>
 
           <section class="board-block glass board-news" id="news">
-            <h2 class="board-title">Top News - Market Trends</h2>
+            <div class="board-head">
+              <h2 class="board-title">Market Intelligence</h2>
+            </div>
             <div class="news-stack" id="newsFeed">
-              <article class="news-row"></article>
+              <!-- JS will populate -->
             </div>
           </section>
         </section>
 
-        <section class="board-block glass" id="defi-pools" style="margin-top: 32px;">
-          <h2 class="board-title">Top DeFi Yield Pools (Mantle)</h2>
-          <div class="price-grid" id="poolsGrid"></div>
+        <!-- 4. Yield Opportunities -->
+        <section class="board-block glass" id="yield-strip">
+          <div class="board-head">
+            <h2 class="board-title">Yield Opportunities</h2>
+          </div>
+          <div class="yield-grid" id="poolsGrid"></div>
+        </section>
+
+        <!-- 5. Historical Data -->
+        <section class="board-block glass" id="historical">
+          <div class="board-head">
+            <h2 class="board-title">Historical Data</h2>
+          </div>
+          <div class="historical-placeholder">
+            <p class="muted-desc" style="text-align: center; margin-top: 24px;">Select an asset to view historical performance data.</p>
+          </div>
         </section>
       </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="/script.js?v=2"></script>
+    <script src="/script.js?v=3"></script>
   </body>
 </html>

@@ -10,6 +10,10 @@ const {
   getMantlePools
 } = require("./lib/mantle-tools");
 const { getChatResponse, getChatHistory } = require("./lib/chat-agent");
+const { startNewsAgent } = require("./lib/news-agent");
+
+// Start daily news agent background task
+startNewsAgent();
 
 const host = "127.0.0.1";
 const port = 3000;
@@ -124,6 +128,48 @@ async function handleApiRequest(url, res, req) {
       sendJson(res, 200, await getTokenPrice(contractAddress));
       return true;
     }
+
+    if (url.pathname === "/api/news" && req.method === "GET") {
+      const { db } = require("./lib/firebase");
+      if (!db) {
+        sendJson(res, 500, { error: "DB not initialized" });
+        return true;
+      }
+      try {
+        const snapshot = await db.collection("news").orderBy("createdAt", "desc").limit(6).get();
+        const news = snapshot.docs.map(doc => doc.data());
+        sendJson(res, 200, news);
+      } catch (err) {
+        sendJson(res, 500, { error: "Failed to fetch news" });
+      }
+      return true;
+    }
+
+    if (url.pathname === "/api/portfolio") {
+      const { db } = require("./lib/firebase");
+      if (req.method === "GET") {
+        const sessionId = url.searchParams.get("sessionId");
+        if (!sessionId || !db) {
+          sendJson(res, 400, { error: "Missing sessionId or DB not connected" });
+          return true;
+        }
+        const doc = await db.collection("portfolios").doc(sessionId).get();
+        sendJson(res, 200, doc.exists ? doc.data().assets || [] : []);
+        return true;
+      }
+      
+      if (req.method === "POST") {
+        const bodyStr = await readPostBody(req);
+        const { sessionId, assets } = JSON.parse(bodyStr);
+        if (!sessionId || !db) {
+          sendJson(res, 400, { error: "Missing sessionId or DB not connected" });
+          return true;
+        }
+        await db.collection("portfolios").doc(sessionId).set({ assets, updatedAt: new Date() }, { merge: true });
+        sendJson(res, 200, { success: true });
+        return true;
+      }
+    }
   } catch (error) {
     sendJson(res, 500, {
       error: error instanceof Error ? error.message : "Unknown server error"
@@ -146,6 +192,8 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/PROJECT_MEMORY.md") {
     safePath = "PROJECT_MEMORY.md";
+  } else if (url.pathname === "/portfolio" || url.pathname === "/portfolio.html") {
+    safePath = "public/portfolio.html";
   } else if (url.pathname !== "/") {
     safePath = `public/${url.pathname.replace(/^\/+/, "")}`;
   }

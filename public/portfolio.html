@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mantle RWA – Portfolio Manager</title>
+    <link rel="stylesheet" href="/style.css?v=5" />
+    <style>
+      /* ── Page layout ── */
+      .port-page { display: flex; flex-direction: column; gap: 24px; }
+
+      /* ── Summary bar ── */
+      .port-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--card-border);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .port-summary-cell {
+        background: var(--card-bg);
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .port-summary-cell:hover { background: var(--card-hover-bg); }
+      .port-summary-val {
+        font-family: var(--font-title);
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: var(--text-main);
+      }
+
+      /* ── Main grid ── */
+      .port-main {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      /* ── Panel card ── */
+      .port-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 18px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .port-card-title {
+        font-family: var(--font-title);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.02em;
+      }
+
+      /* ── Donut chart ── */
+      .donut-wrap {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+        flex-shrink: 0;
+      }
+      .donut-canvas { width: 200px; height: 200px; }
+      .donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .donut-center-label {
+        font-family: var(--font-label);
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .donut-center-val {
+        font-family: var(--font-title);
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: var(--text-main);
+      }
+
+      /* ── Legend ── */
+      .donut-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+      }
+      .legend-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .legend-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+      .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+      .legend-ticker {
+        font-family: var(--font-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-main);
+        white-space: nowrap;
+      }
+      .legend-pct {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-family: var(--font-label);
+        flex-shrink: 0;
+      }
+      .legend-bar-bg {
+        flex: 1;
+        height: 3px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 2px;
+        overflow: hidden;
+        min-width: 40px;
+      }
+      .legend-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+      /* ── Form ── */
+      .form-group { display: flex; flex-direction: column; gap: 6px; }
+      .port-input {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--card-border);
+        padding: 11px 14px;
+        border-radius: 10px;
+        color: var(--text-main);
+        font-family: var(--font-label);
+        font-size: 14px;
+        width: 100%;
+        transition: border-color 150ms;
+      }
+      .port-input:focus { outline: none; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+      .toggle-group { display: flex; gap: 8px; }
+      .toggle-btn {
+        flex: 1; padding: 9px; background: transparent;
+        border: 1px solid var(--card-border); color: var(--text-muted);
+        border-radius: 8px; cursor: pointer; font-family: var(--font-label);
+        font-size: 13px; font-weight: 600; transition: all 150ms;
+      }
+      .toggle-btn.active {
+        background: rgba(255,255,255,0.06);
+        color: var(--text-main);
+        border-color: rgba(255,255,255,0.2);
+      }
+      .add-btn {
+        width: 100%; padding: 13px;
+        background: var(--text-main); color: var(--bg);
+        border: none; border-radius: 10px;
+        font-weight: 700; cursor: pointer;
+        font-family: var(--font-label); font-size: 14px;
+        transition: all 150ms; letter-spacing: 0.01em;
+      }
+      .add-btn:hover { background: #e5e5e5; transform: translateY(-1px); }
+      .add-btn:active { transform: translateY(0); }
+
+      /* ── Custom select ── */
+      .custom-multi-select { position: relative; }
+      .select-header {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--card-border);
+        padding: 11px 14px;
+        border-radius: 10px; color: var(--text-main);
+        font-family: var(--font-label); font-size: 14px;
+        cursor: pointer; transition: border-color 150ms;
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      .select-header:hover { border-color: rgba(255,255,255,0.2); }
+      .select-header::after { content: '▾'; color: var(--text-muted); font-size: 12px; }
+      .select-options {
+        position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+        background: #1a1a1a; border: 1px solid var(--card-border);
+        border-radius: 10px; z-index: 20; max-height: 220px; overflow-y: auto;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      }
+      .select-option-label {
+        padding: 10px 14px; cursor: pointer; color: var(--text-main);
+        font-size: 13px; font-family: var(--font-label); transition: background 100ms;
+      }
+      .select-option-label:hover { background: rgba(255,255,255,0.05); }
+
+      /* ── Holdings list ── */
+      .holdings-col { display: flex; flex-direction: column; gap: 16px; }
+      .holdings-header {
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      .asset-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 14px 16px; background: rgba(255,255,255,0.02);
+        border: 1px solid var(--card-border); border-radius: 12px;
+        transition: border-color 150ms, background 150ms;
+        gap: 12px;
+      }
+      .asset-row:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+      .asset-row-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .asset-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+      .asset-row-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .asset-ticker-label {
+        font-family: var(--font-label);
+        font-size: 14px; font-weight: 700; color: var(--text-main);
+      }
+      .asset-token-count {
+        font-size: 11px; color: var(--text-muted); font-family: var(--font-label);
+      }
+      .asset-row-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+      .asset-usd-val {
+        font-family: var(--font-title);
+        font-size: 16px; font-weight: 700;
+        color: var(--text-main); letter-spacing: -0.02em;
+      }
+      .asset-pct-badge {
+        font-size: 11px; color: var(--text-muted);
+        font-family: var(--font-label);
+        background: rgba(255,255,255,0.04);
+        padding: 2px 6px; border-radius: 4px;
+        white-space: nowrap;
+      }
+      .remove-btn {
+        background: transparent; color: rgba(255,77,77,0.6);
+        border: 1px solid rgba(255,77,77,0.15);
+        padding: 5px 10px; border-radius: 6px; cursor: pointer;
+        font-size: 11px; font-family: var(--font-label); font-weight: 600;
+        transition: all 150ms;
+      }
+      .remove-btn:hover { background: rgba(255,77,77,0.1); color: #ff4d4d; border-color: rgba(255,77,77,0.3); }
+
+      /* ── Save btn ── */
+      .save-btn {
+        width: 100%; padding: 13px;
+        background: transparent; border: 1px solid var(--card-border);
+        color: var(--text-muted); border-radius: 10px;
+        font-weight: 600; cursor: pointer;
+        font-family: var(--font-label); font-size: 14px;
+        transition: all 150ms;
+      }
+      .save-btn:hover { border-color: rgba(255,255,255,0.3); color: var(--text-main); background: rgba(255,255,255,0.03); }
+
+      /* ── Empty state ── */
+      .empty-state {
+        display: flex; flex-direction: column; align-items: center;
+        gap: 12px; padding: 40px 0; color: var(--text-muted);
+        font-family: var(--font-label); font-size: 13px; text-align: center;
+      }
+      .empty-icon { font-size: 36px; opacity: 0.3; }
+
+      /* ── Save status ── */
+      .save-status {
+        text-align: center; font-size: 13px;
+        color: var(--lime); font-family: var(--font-label);
+        display: none; padding: 4px;
+      }
+
+      /* chart-bar for legend */
+      .chart-bar-bg { flex: 1; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+      .chart-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+      @media (max-width: 900px) {
+        .port-main { grid-template-columns: 1fr; }
+        .port-summary { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-logo">Mantle RWA</div>
+        <nav class="nav-list" aria-label="Primary">
+          <a class="nav-item nav-item-active" href="/portfolio">Portfolio Manager</a>
+          <a class="nav-item" href="/">Treasuries &amp; Stocks</a>
+          <a class="nav-item" href="/#copilot">AI Copilot &amp; News</a>
+          <a class="nav-item" href="/#yield-strip">Yield Opportunities</a>
+          <a class="nav-item" href="/#historical">Historical Data</a>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <div class="port-page">
+
+          <!-- Page header -->
+          <div class="board-head">
+            <div>
+              <span class="eyebrow">Mantle RWA</span>
+              <h1 class="board-title" style="margin-top:4px;">Portfolio Manager</h1>
+            </div>
+          </div>
+
+          <!-- Summary metrics bar -->
+          <div class="port-summary">
+            <div class="port-summary-cell">
+              <span class="eyebrow">Total Value</span>
+              <span class="port-summary-val" id="totalValueDisplay">$0.00</span>
+            </div>
+            <div class="port-summary-cell">
+              <span class="eyebrow">24h Change</span>
+              <span class="port-summary-val" id="summaryChange" style="color: var(--text-muted);">—</span>
+            </div>
+            <div class="port-summary-cell">
+              <span class="eyebrow">Assets</span>
+              <span class="port-summary-val" id="summaryAssetCount">0</span>
+            </div>
+            <div class="port-summary-cell">
+              <span class="eyebrow">Est. Yield / yr</span>
+              <span class="port-summary-val" id="summaryYield" style="color: var(--text-muted);">—</span>
+            </div>
+          </div>
+
+          <!-- Main content -->
+          <div class="port-main">
+
+            <!-- Left: Donut chart + Add form -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+
+              <!-- Donut chart card -->
+              <div class="port-card">
+                <span class="port-card-title">Allocation</span>
+                <div class="donut-wrap">
+                  <canvas class="donut-canvas" id="donutCanvas" width="200" height="200"></canvas>
+                  <div class="donut-center">
+                    <span class="donut-center-label">Portfolio</span>
+                    <span class="donut-center-val" id="donutCenterVal">$0</span>
+                  </div>
+                </div>
+                <div class="donut-legend" id="donutLegend">
+                  <p class="muted-desc" style="text-align:center;font-size:12px;">Add assets to see allocation</p>
+                </div>
+              </div>
+
+              <!-- Add asset form -->
+              <div class="port-card">
+                <span class="port-card-title">Add Asset</span>
+
+                <div class="form-group">
+                  <label class="panel-label">Select Asset</label>
+                  <div class="custom-multi-select">
+                    <div class="select-header" id="selectHeader"
+                      onclick="toggleDropdown()">— Select Asset —</div>
+                    <div class="select-options" id="assetCheckboxes" style="display:none;"></div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="panel-label">Input Method</label>
+                  <div class="toggle-group">
+                    <button class="toggle-btn active" id="btnToggleUsd">USD Value ($)</button>
+                    <button class="toggle-btn" id="btnToggleTokens">Token Amount</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="panel-label" id="amountLabel">Amount ($)</label>
+                  <input class="port-input" type="number" id="amountInput" placeholder="e.g. 1000" min="0" step="any" />
+                </div>
+
+                <button class="add-btn" id="addAssetBtn">＋ Add to Portfolio</button>
+              </div>
+            </div>
+
+            <!-- Right: Holdings list -->
+            <div class="port-card holdings-col">
+              <div class="holdings-header">
+                <span class="port-card-title">Current Holdings</span>
+                <span style="font-family:var(--font-title);font-size:13px;color:var(--text-muted);" id="holdingsCount">0 assets</span>
+              </div>
+
+              <div id="holdingsList">
+                <div class="empty-state">
+                  <span class="empty-icon">📊</span>
+                  <span>No assets yet.<br>Add your first position on the left.</span>
+                </div>
+              </div>
+
+              <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">
+                <button class="save-btn" id="savePortfolioBtn">Save Portfolio</button>
+                <p class="save-status" id="saveStatus">✓ Saved successfully!</p>
+              </div>
+            </div>
+
+          </div><!-- /port-main -->
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // ── State ──
+      let availableAssets = [];
+      let portfolio = [];
+      let isUsdMode = true;
+      let selectedAssetTicker = '';
+
+      const COLORS = [
+        '#00f2ff','#ff00e5','#adff00','#ffaa00',
+        '#00aaff','#ff3366','#7c3aed','#10b981',
+        '#f59e0b','#ef4444'
+      ];
+
+      // ── Helpers ──
+      function fmt(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+      function toggleDropdown() {
+        const el = document.getElementById('assetCheckboxes');
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+      }
+
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.custom-multi-select')) {
+          const el = document.getElementById('assetCheckboxes');
+          if (el) el.style.display = 'none';
+        }
+      });
+
+      // ── Load assets ──
+      async function loadAssets() {
+        const res = await fetch('/api/rwa-prices');
+        availableAssets = await res.json();
+        const container = document.getElementById('assetCheckboxes');
+        container.innerHTML = '';
+        availableAssets.forEach(asset => {
+          const opt = document.createElement('div');
+          opt.className = 'select-option-label';
+          opt.textContent = `${asset.ticker}  –  ${asset.name}  ($${asset.price?.toFixed(2) ?? '—'})`;
+          opt.onclick = () => {
+            selectedAssetTicker = asset.ticker;
+            document.getElementById('selectHeader').textContent = `${asset.ticker} – ${asset.name}`;
+            document.getElementById('assetCheckboxes').style.display = 'none';
+          };
+          container.appendChild(opt);
+        });
+      }
+
+      // ── Load portfolio ──
+      async function loadPortfolio() {
+        let sid = localStorage.getItem('chatSessionId');
+        if (!sid) { sid = 'session-' + Math.random().toString(36).slice(2); localStorage.setItem('chatSessionId', sid); }
+        try {
+          const res = await fetch(`/api/portfolio?sessionId=${sid}`);
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) { portfolio = data; renderAll(); }
+        } catch(e) {}
+      }
+
+      // ── Add asset ──
+      document.getElementById('addAssetBtn').addEventListener('click', () => {
+        const amt = parseFloat(document.getElementById('amountInput').value);
+        if (!selectedAssetTicker || isNaN(amt) || amt <= 0) return;
+        const asset = availableAssets.find(a => a.ticker === selectedAssetTicker);
+        if (!asset) return;
+
+        const tokenAmount = isUsdMode ? amt / asset.price : amt;
+        const usdValue    = isUsdMode ? amt : amt * asset.price;
+
+        const idx = portfolio.findIndex(p => p.ticker === selectedAssetTicker);
+        if (idx >= 0) {
+          portfolio[idx].amount   += tokenAmount;
+          portfolio[idx].valueUsd += usdValue;
+        } else {
+          portfolio.push({ ticker: asset.ticker, name: asset.name, priceAtAdd: asset.price, amount: tokenAmount, valueUsd: usdValue });
+        }
+
+        document.getElementById('amountInput').value = '';
+        selectedAssetTicker = '';
+        document.getElementById('selectHeader').textContent = '— Select Asset —';
+        renderAll();
+      });
+
+      // ── Toggle ──
+      document.getElementById('btnToggleUsd').addEventListener('click', () => {
+        isUsdMode = true;
+        document.getElementById('btnToggleUsd').classList.add('active');
+        document.getElementById('btnToggleTokens').classList.remove('active');
+        document.getElementById('amountLabel').textContent = 'Amount ($)';
+      });
+      document.getElementById('btnToggleTokens').addEventListener('click', () => {
+        isUsdMode = false;
+        document.getElementById('btnToggleTokens').classList.add('active');
+        document.getElementById('btnToggleUsd').classList.remove('active');
+        document.getElementById('amountLabel').textContent = 'Amount (Tokens)';
+      });
+
+      // ── Remove ──
+      window.removeAsset = function(ticker) {
+        portfolio = portfolio.filter(p => p.ticker !== ticker);
+        renderAll();
+      };
+
+      // ── Render all ──
+      function renderAll() {
+        renderSummary();
+        renderHoldings();
+        renderDonut();
+      }
+
+      function renderSummary() {
+        const total = portfolio.reduce((s, p) => s + p.valueUsd, 0);
+        document.getElementById('totalValueDisplay').textContent = fmt(total);
+        document.getElementById('summaryAssetCount').textContent = portfolio.length;
+        document.getElementById('donutCenterVal').textContent = total >= 1000
+          ? '$' + (total/1000).toFixed(1) + 'k' : fmt(total);
+
+        if (total > 0) {
+          // mock estimated yield weighted ~4-8% per asset type
+          const yieldPct = 5.2;
+          const yieldAmt = total * yieldPct / 100;
+          document.getElementById('summaryYield').style.color = 'var(--lime)';
+          document.getElementById('summaryYield').textContent = `${fmt(yieldAmt)} (${yieldPct}%)`;
+        } else {
+          document.getElementById('summaryYield').textContent = '—';
+          document.getElementById('summaryYield').style.color = 'var(--text-muted)';
+        }
+      }
+
+      function renderHoldings() {
+        const list = document.getElementById('holdingsList');
+        const total = portfolio.reduce((s, p) => s + p.valueUsd, 0);
+        document.getElementById('holdingsCount').textContent = `${portfolio.length} asset${portfolio.length !== 1 ? 's' : ''}`;
+
+        if (!portfolio.length) {
+          list.innerHTML = `<div class="empty-state"><span class="empty-icon">📊</span><span>No assets yet.<br>Add your first position on the left.</span></div>`;
+          return;
+        }
+
+        const sorted = [...portfolio].sort((a, b) => b.valueUsd - a.valueUsd);
+        list.innerHTML = sorted.map((p, i) => {
+          const pct = total > 0 ? (p.valueUsd / total * 100).toFixed(1) : 0;
+          const color = COLORS[i % COLORS.length];
+          return `
+          <div class="asset-row">
+            <div class="asset-row-left">
+              <div class="asset-color-dot" style="background:${color};"></div>
+              <div class="asset-row-info">
+                <span class="asset-ticker-label">${p.ticker}</span>
+                <span class="asset-token-count">${p.amount.toFixed(4)} tokens · ${p.name}</span>
+              </div>
+            </div>
+            <div class="asset-row-right">
+              <span class="asset-pct-badge">${pct}%</span>
+              <span class="asset-usd-val">${fmt(p.valueUsd)}</span>
+              <button class="remove-btn" onclick="removeAsset('${p.ticker}')">Remove</button>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      // ── Donut chart ──
+      function renderDonut() {
+        const canvas = document.getElementById('donutCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        const total = portfolio.reduce((s, p) => s + p.valueUsd, 0);
+
+        if (!portfolio.length || total === 0) {
+          // Empty ring
+          ctx.beginPath();
+          ctx.arc(W/2, H/2, 78, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+          ctx.lineWidth = 22;
+          ctx.stroke();
+          document.getElementById('donutLegend').innerHTML = '<p class="muted-desc" style="text-align:center;font-size:12px;">Add assets to see allocation</p>';
+          return;
+        }
+
+        const sorted = [...portfolio].sort((a, b) => b.valueUsd - a.valueUsd);
+        const GAP = 0.025; // gap between segments in radians
+        let startAngle = -Math.PI / 2;
+
+        sorted.forEach((p, i) => {
+          const slice = (p.valueUsd / total) * (Math.PI * 2 - sorted.length * GAP);
+          const color = COLORS[i % COLORS.length];
+
+          ctx.beginPath();
+          ctx.arc(W/2, H/2, 78, startAngle, startAngle + slice);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 22;
+          ctx.lineCap = 'butt';
+          ctx.stroke();
+
+          startAngle += slice + GAP;
+        });
+
+        // Legend
+        const legendHTML = sorted.map((p, i) => {
+          const pct = (p.valueUsd / total * 100).toFixed(1);
+          const color = COLORS[i % COLORS.length];
+          return `
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-dot" style="background:${color};"></div>
+              <span class="legend-ticker">${p.ticker}</span>
+            </div>
+            <div class="legend-bar-bg">
+              <div class="legend-bar-fill" style="width:${pct}%;background:${color};"></div>
+            </div>
+            <span class="legend-pct">${pct}%</span>
+          </div>`;
+        }).join('');
+        document.getElementById('donutLegend').innerHTML = legendHTML;
+      }
+
+      // ── Save ──
+      document.getElementById('savePortfolioBtn').addEventListener('click', async () => {
+        const sid = localStorage.getItem('chatSessionId');
+        if (!sid) return;
+        const res = await fetch('/api/portfolio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sid, assets: portfolio })
+        });
+        if (res.ok) {
+          const s = document.getElementById('saveStatus');
+          s.style.display = 'block';
+          setTimeout(() => s.style.display = 'none', 3000);
+        }
+      });
+
+      // ── Init ──
+      loadAssets().then(loadPortfolio);
+    </script>
+  </body>
+</html>
