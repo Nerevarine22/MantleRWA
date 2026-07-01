@@ -119,6 +119,8 @@ async function renderNewsFeed() {
       .map(
         (item) => {
           const safeTitle = item.title.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+          const safeUrl = item.url.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+          const safeSnippet = item.snippet.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
           return `
           <div class="news-card">
             ${item.imageUrl ? `<img src="${item.imageUrl}" alt="News thumbnail" class="news-thumb" />` : ''}
@@ -134,7 +136,7 @@ async function renderNewsFeed() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                   Read Source
                 </a>
-                <button class="news-btn-ask" onclick="askCopilotAboutNews('${safeTitle}')">
+                <button class="news-btn-ask" onclick="askCopilotAboutNews('${safeTitle}', '${safeUrl}', '${safeSnippet}')">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                   Ask Copilot
                 </button>
@@ -151,11 +153,11 @@ async function renderNewsFeed() {
   }
 }
 
-window.askCopilotAboutNews = function(newsTitle) {
+window.askCopilotAboutNews = function(newsTitle, newsUrl, newsSnippet) {
   const chatInput = document.getElementById("chatInput");
   const chatSendBtn = document.getElementById("chatSendBtn");
   if (chatInput && chatSendBtn) {
-    chatInput.value = `Can you explain this news to me in detail: ${newsTitle}`;
+    chatInput.value = `Can you explain this news to me in detail: "${newsTitle}"? Context: ${newsSnippet} (Link: ${newsUrl})`;
     chatSendBtn.click();
     chatInput.scrollIntoView({ behavior: 'smooth' });
   }
