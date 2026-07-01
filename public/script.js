@@ -159,7 +159,6 @@ window.askCopilotAboutNews = function(newsTitle, newsUrl, newsSnippet) {
   if (chatInput && chatSendBtn) {
     chatInput.value = `Can you explain this news to me in detail: "${newsTitle}"? Context: ${newsSnippet} (Link: ${newsUrl})`;
     chatSendBtn.click();
-    chatInput.scrollIntoView({ behavior: 'smooth' });
   }
 };
 
