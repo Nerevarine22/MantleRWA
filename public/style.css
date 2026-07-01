@@ -56,8 +56,16 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
 }
 
 .price-card .token-price {
-  font-size: 15px;
+  font-size: 16px;
   letter-spacing: -0.02em;
+}
+
+.price-card .token-symbol {
+  font-size: 14px;
+}
+
+.price-card .token-name {
+  font-size: 11px;
 }
 
 .card-title, .token-symbol, .protocol-name, .pool-name {
@@ -215,7 +223,7 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
 }
 
 .news-stack {
-  height: calc(100vh - 360px);
+  height: calc(100vh - 420px);
   min-height: 500px;
   overflow-y: auto;
   display: flex;
@@ -238,8 +246,8 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
 
 .price-card {
   height: auto;
-  padding: 10px 12px;
-  gap: 6px;
+  padding: 14px 16px;
+  gap: 8px;
   justify-content: flex-start;
 }
 
@@ -257,8 +265,8 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
 }
 
 .token-logo-wrapper {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: #262626;
   display: flex;
@@ -583,7 +591,7 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
 
 /* Chat AI Copilot */
 .board-chat .chat-shell {
-  height: calc(100vh - 360px);
+  height: calc(100vh - 420px);
   min-height: 500px;
   display: flex;
   flex-direction: column;
