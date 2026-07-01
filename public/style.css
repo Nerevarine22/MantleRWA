@@ -572,7 +572,8 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
 
 /* Chat AI Copilot */
 .board-chat .chat-shell {
-  height: 650px;
+  flex: 1;
+  min-height: 650px;
   display: flex;
   flex-direction: column;
   background: var(--card-bg);
