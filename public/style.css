@@ -211,6 +211,17 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 32px;
+  align-items: start;
+}
+
+.news-stack {
+  height: calc(100vh - 360px);
+  min-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 8px;
 }
 
 /* Cards */
@@ -572,8 +583,8 @@ h1, h2, h3, .board-title, .token-price, .metric-value {
 
 /* Chat AI Copilot */
 .board-chat .chat-shell {
-  flex: 1;
-  min-height: 650px;
+  height: calc(100vh - 360px);
+  min-height: 500px;
   display: flex;
   flex-direction: column;
   background: var(--card-bg);
