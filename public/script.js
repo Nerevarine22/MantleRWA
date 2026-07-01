@@ -155,7 +155,7 @@ window.askCopilotAboutNews = function(newsTitle) {
   const chatInput = document.getElementById("chatInput");
   const chatSendBtn = document.getElementById("chatSendBtn");
   if (chatInput && chatSendBtn) {
-    chatInput.value = `Can you explain this news to me in detail: ${newsTitle}`;
+    chatInput.value = `Can you explain this news to me in detail (PLEASE REPLY IN ENGLISH): ${newsTitle}`;
     chatSendBtn.click();
     chatInput.scrollIntoView({ behavior: 'smooth' });
   }
